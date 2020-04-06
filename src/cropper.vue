@@ -760,38 +760,38 @@ export default {
         let type = file.type || file.name.toLowerCase().split('.').pop()
         return false
       }
-
-      if (typeof window !== 'undefined' && typeof window.FileReader !== 'undefined') {
+      const isVideo = /^video/.test(file.type)
+      if (isVideo && typeof window.Blob !== 'undefined') {
+        let video = document.createElement('video')
+        video.muted = true
+        video.preload = 'auto'
+        video.loop = true
+        video.src = URL.createObjectURL(file)
+        video.currentTime = 1
+        if (video.readyState >= video.HAVE_FUTURE_DATA) {
+          this._onVideoLoad(video)
+        } else {
+          video.addEventListener('canplay', () => {
+            console.log('can play event')
+            this._onVideoLoad(video)
+          }, false);
+        }
+      } else if (typeof window !== 'undefined' && typeof window.FileReader !== 'undefined') {
         let fr = new FileReader()
         fr.onload = (e) => {
           let fileData = e.target.result
           const base64 = u.parseDataUrl(fileData)
-          const isVideo = /^video/.test(file.type)
-          if (isVideo) {
-            let video = document.createElement('video')
-            video.src = fileData
-            fileData = null;
-            if (video.readyState >= video.HAVE_FUTURE_DATA) {
-              this._onVideoLoad(video)
-            } else {
-              video.addEventListener('canplay', () => {
-                console.log('can play event')
-                this._onVideoLoad(video)
-              }, false);
-            }
-          } else {
-            let orientation = 1
-            try {
-              orientation = u.getFileOrientation(u.base64ToArrayBuffer(base64))
-            } catch (err) { }
-            if (orientation < 1) orientation = 1
-            let img = new Image()
-            img.src = fileData
-            fileData = null;
-            img.onload = () => {
-              this._onload(img, orientation)
-              this.emitEvent(events.NEW_IMAGE_EVENT)
-            }
+          let orientation = 1
+          try {
+            orientation = u.getFileOrientation(u.base64ToArrayBuffer(base64))
+          } catch (err) { }
+          if (orientation < 1) orientation = 1
+          let img = new Image()
+          img.src = fileData
+          fileData = null;
+          img.onload = () => {
+            this._onload(img, orientation)
+            this.emitEvent(events.NEW_IMAGE_EVENT)
           }
         }
         fr.readAsDataURL(file)

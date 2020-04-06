@@ -1186,39 +1186,39 @@ var component = { render: function render() {
         var type = file.type || file.name.toLowerCase().split('.').pop();
         return false;
       }
-
-      if (typeof window !== 'undefined' && typeof window.FileReader !== 'undefined') {
+      var isVideo = /^video/.test(file.type);
+      if (isVideo && typeof window.Blob !== 'undefined') {
+        var video = document.createElement('video');
+        video.muted = true;
+        video.preload = 'auto';
+        video.loop = true;
+        video.src = URL.createObjectURL(file);
+        video.currentTime = 1;
+        if (video.readyState >= video.HAVE_FUTURE_DATA) {
+          this._onVideoLoad(video);
+        } else {
+          video.addEventListener('canplay', function () {
+            console.log('can play event');
+            _this6._onVideoLoad(video);
+          }, false);
+        }
+      } else if (typeof window !== 'undefined' && typeof window.FileReader !== 'undefined') {
         var fr = new FileReader();
         fr.onload = function (e) {
           var fileData = e.target.result;
           var base64 = u.parseDataUrl(fileData);
-          var isVideo = /^video/.test(file.type);
-          if (isVideo) {
-            var video = document.createElement('video');
-            video.src = fileData;
-            fileData = null;
-            if (video.readyState >= video.HAVE_FUTURE_DATA) {
-              _this6._onVideoLoad(video);
-            } else {
-              video.addEventListener('canplay', function () {
-                console.log('can play event');
-                _this6._onVideoLoad(video);
-              }, false);
-            }
-          } else {
-            var orientation = 1;
-            try {
-              orientation = u.getFileOrientation(u.base64ToArrayBuffer(base64));
-            } catch (err) {}
-            if (orientation < 1) orientation = 1;
-            var img = new Image();
-            img.src = fileData;
-            fileData = null;
-            img.onload = function () {
-              _this6._onload(img, orientation);
-              _this6.emitEvent(events.NEW_IMAGE_EVENT);
-            };
-          }
+          var orientation = 1;
+          try {
+            orientation = u.getFileOrientation(u.base64ToArrayBuffer(base64));
+          } catch (err) {}
+          if (orientation < 1) orientation = 1;
+          var img = new Image();
+          img.src = fileData;
+          fileData = null;
+          img.onload = function () {
+            _this6._onload(img, orientation);
+            _this6.emitEvent(events.NEW_IMAGE_EVENT);
+          };
         };
         fr.readAsDataURL(file);
       }
