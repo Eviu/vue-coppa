@@ -834,8 +834,8 @@ export default {
       if (!this.img && !this.video) return
       var imgData = this.imgData
 
-      this.naturalWidth = this.img ? this.img.naturalWidth : this.video.videoHeight
-      this.naturalHeight = this.img ? this.img.naturalHeight : this.video.videoWidth
+      this.naturalWidth = this.img ? this.img.naturalWidth : this.video.videoWidth
+      this.naturalHeight = this.img ? this.img.naturalHeight : this.video.videoHeight
 
       imgData.startX = u.numberValid(imgData.startX) ? imgData.startX : 0
       imgData.startY = u.numberValid(imgData.startY) ? imgData.startY : 0
