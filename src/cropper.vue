@@ -178,7 +178,7 @@ export default {
           }
         }
         if (set) {
-          if (!this.img) {
+          if (!this.img && !this.video) {
             this.remove()
           } else {
             this.$nextTick(() => {
@@ -211,7 +211,7 @@ export default {
       this.onDimensionChange()
     },
     canvasColor: function () {
-      if (!this.img) {
+      if (!this.img && !this.video) {
         this._setPlaceholders()
       } else {
         this._draw()
@@ -223,17 +223,17 @@ export default {
       }
     },
     placeholder: function () {
-      if (!this.img) {
+      if (!this.img && !this.video) {
         this._setPlaceholders()
       }
     },
     placeholderColor: function () {
-      if (!this.img) {
+      if (!this.img && !this.video) {
         this._setPlaceholders()
       }
     },
     computedPlaceholderFontSize: function () {
-      if (!this.img) {
+      if (!this.img && !this.video) {
         this._setPlaceholders()
       }
     },
@@ -245,7 +245,7 @@ export default {
     },
     scaleRatio (val, oldVal) {
       if (this.passive) return
-      if (!this.img) return
+      if (!this.img && !this.video) return
       if (!u.numberValid(val)) return
 
       var x = 1
@@ -695,26 +695,14 @@ export default {
 
     _onVideoLoad (video, initial) {
       this.video = video
-      const canvas = document.createElement('canvas')
-      const { videoWidth, videoHeight } = video
-      canvas.width = videoWidth
-      canvas.height = videoHeight
-      const ctx = canvas.getContext('2d')
       this.loading = false
       const drawFrame = (initial) => {
         if (!this.video) return
-        ctx.drawImage(this.video, 0, 0, videoWidth, videoHeight)
-        const frame = new Image()
-        frame.src = canvas.toDataURL()
-        frame.onload = () => {
-          this.img = frame
-          // this._placeImage()
           if (initial) {
             this._placeImage()
           } else {
             this._draw()
           }
-        }
       }
       drawFrame(true)
       const keepDrawing = () => {
@@ -843,11 +831,11 @@ export default {
     },
 
     _placeImage (applyMetadata) {
-      if (!this.img) return
+      if (!this.img && !this.video) return
       var imgData = this.imgData
 
-      this.naturalWidth = this.img.naturalWidth
-      this.naturalHeight = this.img.naturalHeight
+      this.naturalWidth = this.img ? this.img.naturalWidth : this.video.videoHeight
+      this.naturalHeight = this.img ? this.img.naturalHeight : this.video.videoWidth
 
       imgData.startX = u.numberValid(imgData.startX) ? imgData.startX : 0
       imgData.startY = u.numberValid(imgData.startY) ? imgData.startY : 0
@@ -1195,13 +1183,13 @@ export default {
     },
 
     _drawFrame () {
-      if (!this.img) return
+      if (!this.img && !this.video) return
       this.loading = false
       let ctx = this.ctx
       let { startX, startY, width, height } = this.imgData
 
       this._paintBackground()
-      ctx.drawImage(this.img, startX, startY, width, height)
+      ctx.drawImage(this.img ? this.img : this.video, startX, startY, width, height)
 
       if (this.preventWhiteSpace) {
         this._clip(this._createContainerClipPath)
@@ -1291,7 +1279,7 @@ export default {
     },
 
     onDimensionChange () {
-      if (!this.img) {
+      if (!this.img && !this.video) {
         this._initialize()
       } else {
         if (this.preventWhiteSpace) {

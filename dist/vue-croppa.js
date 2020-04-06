@@ -1,8 +1,8 @@
 /*
- * vue-croppa v1.3.8
+ * vue-croppa v1.3.9
  * https://github.com/zhanziyang/vue-croppa
  * 
- * Copyright (c) 2018 zhanziyang
+ * Copyright (c) 2020 zhanziyang
  * Released under the ISC license
  */
   
@@ -607,7 +607,7 @@ var component = { render: function render() {
           }
         }
         if (set$$1) {
-          if (!_this.img) {
+          if (!_this.img && !_this.video) {
             _this.remove();
           } else {
             _this.$nextTick(function () {
@@ -640,7 +640,7 @@ var component = { render: function render() {
       this.onDimensionChange();
     },
     canvasColor: function canvasColor() {
-      if (!this.img) {
+      if (!this.img && !this.video) {
         this._setPlaceholders();
       } else {
         this._draw();
@@ -652,17 +652,17 @@ var component = { render: function render() {
       }
     },
     placeholder: function placeholder() {
-      if (!this.img) {
+      if (!this.img && !this.video) {
         this._setPlaceholders();
       }
     },
     placeholderColor: function placeholderColor() {
-      if (!this.img) {
+      if (!this.img && !this.video) {
         this._setPlaceholders();
       }
     },
     computedPlaceholderFontSize: function computedPlaceholderFontSize() {
-      if (!this.img) {
+      if (!this.img && !this.video) {
         this._setPlaceholders();
       }
     },
@@ -674,7 +674,7 @@ var component = { render: function render() {
     },
     scaleRatio: function scaleRatio(val, oldVal) {
       if (this.passive) return;
-      if (!this.img) return;
+      if (!this.img && !this.video) return;
       if (!u.numberValid(val)) return;
 
       var x = 1;
@@ -947,6 +947,9 @@ var component = { render: function render() {
     emitNativeEvent: function emitNativeEvent(evt) {
       this.emitEvent(evt.type, evt);
     },
+    setFile: function setFile(file) {
+      this._onNewFileIn(file);
+    },
     _setContainerSize: function _setContainerSize() {
       if (this.useAutoSizing) {
         this.realWidth = +getComputedStyle(this.$refs.wrapper).width.slice(0, -2);
@@ -1120,28 +1123,14 @@ var component = { render: function render() {
       var _this5 = this;
 
       this.video = video;
-      var canvas = document.createElement('canvas');
-      var videoWidth = video.videoWidth,
-          videoHeight = video.videoHeight;
-
-      canvas.width = videoWidth;
-      canvas.height = videoHeight;
-      var ctx = canvas.getContext('2d');
       this.loading = false;
       var drawFrame = function drawFrame(initial) {
         if (!_this5.video) return;
-        ctx.drawImage(_this5.video, 0, 0, videoWidth, videoHeight);
-        var frame = new Image();
-        frame.src = canvas.toDataURL();
-        frame.onload = function () {
-          _this5.img = frame;
-          // this._placeImage()
-          if (initial) {
-            _this5._placeImage();
-          } else {
-            _this5._draw();
-          }
-        };
+        if (initial) {
+          _this5._placeImage();
+        } else {
+          _this5._draw();
+        }
       };
       drawFrame(true);
       var keepDrawing = function keepDrawing() {
@@ -1265,11 +1254,11 @@ var component = { render: function render() {
       return false;
     },
     _placeImage: function _placeImage(applyMetadata) {
-      if (!this.img) return;
+      if (!this.img && !this.video) return;
       var imgData = this.imgData;
 
-      this.naturalWidth = this.img.naturalWidth;
-      this.naturalHeight = this.img.naturalHeight;
+      this.naturalWidth = this.img ? this.img.naturalWidth : this.video.videoHeight;
+      this.naturalHeight = this.img ? this.img.naturalHeight : this.video.videoWidth;
 
       imgData.startX = u.numberValid(imgData.startX) ? imgData.startX : 0;
       imgData.startY = u.numberValid(imgData.startY) ? imgData.startY : 0;
@@ -1608,7 +1597,7 @@ var component = { render: function render() {
       });
     },
     _drawFrame: function _drawFrame() {
-      if (!this.img) return;
+      if (!this.img && !this.video) return;
       this.loading = false;
       var ctx = this.ctx;
       var _imgData2 = this.imgData,
@@ -1619,7 +1608,7 @@ var component = { render: function render() {
 
 
       this._paintBackground();
-      ctx.drawImage(this.img, startX, startY, width, height);
+      ctx.drawImage(this.img ? this.img : this.video, startX, startY, width, height);
 
       if (this.preventWhiteSpace) {
         this._clip(this._createContainerClipPath);
@@ -1712,7 +1701,7 @@ var component = { render: function render() {
       });
     },
     onDimensionChange: function onDimensionChange() {
-      if (!this.img) {
+      if (!this.img && !this.video) {
         this._initialize();
       } else {
         if (this.preventWhiteSpace) {
